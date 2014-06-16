@@ -580,21 +580,17 @@ class Connection(object):
         else:
             args = (Token(command),) + args[1:]
 
-        buff = SYM_EMPTY.join(
-            (SYM_STAR, b(str(len(args))), SYM_CRLF))
+        buff = bytearray()
+        buff.extend(SYM_STAR)
+        buff.extend(b(str(len(args))))
+        buff.extend(SYM_CRLF)
 
         for arg in imap(self.encode, args):
-            # to avoid large string mallocs, chunk the command into the
-            # output list if we're sending large values
-            if len(buff) > 6000 or len(arg) > 6000:
-                buff = SYM_EMPTY.join(
-                    (buff, SYM_DOLLAR, b(str(len(arg))), SYM_CRLF))
-                output.append(buff)
-                output.append(arg)
-                buff = SYM_CRLF
-            else:
-                buff = SYM_EMPTY.join((buff, SYM_DOLLAR, b(str(len(arg))),
-                                       SYM_CRLF, arg, SYM_CRLF))
+            buff.extend(SYM_DOLLAR)
+            buff.extend(b(str(len(arg))))
+            buff.extend(SYM_CRLF)
+            buff.extend(arg)
+            buff.extend(SYM_CRLF)
         output.append(buff)
         return output
 
